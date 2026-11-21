@@ -1,69 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TV AI</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-  body { background: #000; color: #f5f5f7; height: 100vh; display: flex; flex-direction: column; padding: 32px 48px; }
-  #chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding-bottom: 20px; font-size: 26px; line-height: 1.45; }
-  .msg { padding: 18px 24px; border-radius: 18px; max-width: 85%; white-space: pre-wrap; }
-  .user { background: #1c1c1e; align-self: flex-end; color: #fff; border: 1px solid #3a3a3c; }
-  .ai { background: #111; align-self: flex-start; color: #e5e5ea; border: 1px solid #2c2c2e; }
-  #bar { display: flex; gap: 14px; padding-top: 12px; }
-  input { flex: 1; background: #1c1c1e; border: 2px solid #3a3a3c; color: #fff; font-size: 26px; padding: 16px 22px; border-radius: 16px; outline: none; }
-  input:focus { border-color: #fff; }
-  button { background: #fff; color: #000; border: none; font-size: 24px; font-weight: 700; padding: 0 32px; border-radius: 16px; cursor: pointer; }
-  button:focus { outline: 4px solid #8e8e93; }
-</style>
+    <meta charset="UTF-8">
+    <title>TV AI</title>
+    <style>
+        body {
+            background: #0a0f1c;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: -10px;
+        }
+        input, button, textarea {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+            border: 2px solid #555;
+            box-sizing: border-box;
+        }
+        input, textarea {
+            background: #151f38;
+            color: white;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0,123,255,0.5);
+        }
+        button {
+            background: #e50914;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        button:focus {
+            outline: none;
+            background: #ff0d1a;
+            box-shadow: 0 0 10px rgba(229,9,20,0.8);
+            transform: scale(1.01);
+        }
+        #responseArea {
+            background: #151f38;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 150px;
+            white-space: pre-wrap;
+            display: none;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+    </style>
 </head>
 <body>
-  <div id="chat"><div class="msg ai">Ready. Type or use voice typing on your Fire TV remote.</div></div>
-  <div id="bar">
-    <input id="q" type="text" placeholder="Ask anything..." autofocus />
-    <button id="send" onclick="ask()">Send</button>
-  </div>
-<script>
-  const API_KEY = "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";
-  const chat = document.getElementById("chat");
-  const q = document.getElementById("q");
-  let history = [{ role: "system", content: "You are a concise, fast TV assistant. Keep answers clear, direct, and easy to read on a TV screen." }];
+    <div class="container">
+        <label for="apiKey">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
+:</label>
+        <input type="password" id="apiKey" placeholder="AIZSy..." tabindex="1">
 
-  q.addEventListener("keydown", e => { if (e.key === "Enter") ask(); });
+        <input type="text" id="userInput" placeholder="Ask anything..." autofocus tabindex="2">
+        <button id="sendBtn" tabindex="3">Send</button>
 
-  async function ask() {
-    const text = q.value.trim();
-    if (!text) return;
-    q.value = "";
-    addMsg(text, "user");
-    history.push({ role: "user", content: text });
-    const loading = addMsg("Thinking...", "ai");
+        <div id="responseArea"></div>
+    </div>
 
-    try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
-        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: history })
-      });
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content || data.error?.message || "Error getting response.";
-      loading.textContent = reply;
-      history.push({ role: "assistant", content: reply });
-    } catch (err) {
-      loading.textContent = "Network error. Check Wi-Fi.";
-    }
-    chat.scrollTop = chat.scrollHeight;
-  }
+    <script>
+        const inputField = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const apiKeyInput = document.getElementById('apiKey');
+        const responseArea = document.getElementById('responseArea');
 
-  function addMsg(text, cls) {
-    const div = document.createElement("div");
-    div.className = `msg ${cls}`;
-    div.textContent = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    return div;
-  }
-</script>
+        inputField.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                sendBtn.focus();
+            }
+        });
+
+        sendBtn.addEventListener('click', async function() {
+            const apiKey = apiKeyInput.value.trim();
+            const prompt = inputField.value.trim();
+
+            if (!apiKey) {
+                alert("Please enter your API Key.");
+                apiKeyInput.focus();
+                return;
+            }
+            if (!prompt) {
+                alert("Please enter a question.");
+                inputField.focus();
+                return;
+            }
+
+            responseArea.style.display = 'block';
+            responseArea.innerText = "Thinking...";
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    responseArea.innerText = data.candidates[0].content.parts[0].text;
+                } else {
+                    responseArea.innerText = "Error: No response generated. Check your API key.";
+                }
+            } catch (error) {
+                responseArea.innerText = "Connection error. Please check your network.";
+            }
+        });
+    </script>
 </body>
 </html>
